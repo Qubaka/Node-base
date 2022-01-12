@@ -19,8 +19,8 @@ function initialize(passport, getUserByEmail, getUserById) {
             console.log('mysql connected')
             //sql via node
             //To jest przykład jak przesyła się sql'a nodem
-        let sql = 'SELECT * FROM `users` where email="q@q"'
-        con.query(sql, function (err, result) {
+        let sql = 'SELECT * FROM `users` where email= ? '
+        con.query(sql, [form_email], function (err, result) {
             if (err) throw err;
             console.log(result);
   
