@@ -11,4 +11,4 @@ Jak narazie działa tylko dodawanie do bazy danych nie loogowanie i dizała tylk
 
 Jak coś nie działa to pisać, możliwe że będę wiedział co zrobi, W plikach są komentarze które delkatnie tłumaczą co jest czym, mam nadzieje że pomocne
 
-Update: Logowanie jest prawie na miejscu ale trzeba rozwiązać mały problem z bcrypt'em bo jednak za każdym razem zwraca inny hash nawet przy tym samym inpucie.
+Update: Logowanie działa ale nie jestem pewien czy wszystko jest z nim okej, nie ufam temu
