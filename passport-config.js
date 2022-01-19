@@ -5,6 +5,8 @@ const mysql = require('mysql')
 
 function initialize(passport, getUserByEmail, getUserById) {
     const authenticateUser = async (form_email, form_password, done) => {
+        //Pważnie nie mam pojęcia do czego jest getUserByEmail i getUserById też
+
         let con = mysql.createConnection({
             host: 'localhost',
             user: 'root',
@@ -36,13 +38,13 @@ function initialize(passport, getUserByEmail, getUserById) {
             //Tutaj musiałem zrobić krótką funkcję żeby móc użyćasync bo inaczej hasło nie miało czasu się hashować przed jego sprawdzeniem
             //Wszystko w teorii POWINO działać ale bcrypt za każdym razem zwraca innego hasha?
             async function HashAndCheck(){
-                console.log(form_password)
-                console.log(result[0].password)
+                //console.log(form_password)
+                //console.log(result[0].password)
                 let hashedPassword = await bcrypt.hash(form_password, 10)
-                console.log(hashedPassword);
-                console.log(result[0].password);
-                if ( hashedPassword == result[0].password) {
-                    return done(null, user)
+                //console.log(hashedPassword);
+                //console.log(result[0].password);
+                if ( bcrypt.compare(hashedPassword, result[0].password) ) {
+                    return done(null, form_email)
                 } else {
                 return done(null, false, { message: 'Password incorrect' })
                 }
@@ -59,12 +61,19 @@ function initialize(passport, getUserByEmail, getUserById) {
         })
         })
     }
-
+    
     passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser))
-    passport.serializeUser((user, done) => done(null, user.id))
+    /*passport.serializeUser((user, done) => done(null, user.id))
     passport.deserializeUser((id, done) => {
         return done(null, getUserById(id))
-    })
+    })*/
+    passport.serializeUser(function(user, done) {
+        done(null, user);
+      });
+      
+      passport.deserializeUser(function(user, done) {
+        done(null, user);
+      });
 }
 
 module.exports = initialize
