@@ -69,32 +69,6 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     try {
         let hashedPassword = await bcrypt.hash(req.body.password, 10)
   
-        /*
-        // połączenie z bazą danych
-        let con = mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: '',
-            database: "bookweb"
-        })
-        //połączenie z mysql(?)
-        con.connect(err =>{
-            if(err){
-                throw err
-            }
-            console.log('mysql connected')
-            //sql via node
-            //To jest przykład jak przesyła się sql'a nodem
-        let sql = 'INSERT INTO users ( name, email, password ) VALUES ( ? , ? , ? )'
-        // Pytajniki w zapytaniu oznaczają puste miejsca gdzie można wstawic wartości pobrane z formsów node'em
-        //To co chesz wstawić za pytajniki jest tu \|/ w [] 
-        con.query(sql, [req.body.name, req.body.email, hashedPassword], function (err, result) {
-            if (err) throw err;
-            console.log(result);
-  
-        })
-        });
-        */
          //Sequelize version:
         //Tworzenie modelu bazy danych "bookweb.users"
         
@@ -119,19 +93,43 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
             timestamps: false,
             tableName: 'users',
         });
-        
-        //To tworzy rekord w tabeli 
-        User.create({
-            name: req.body.name, 
-            email:req.body.email, 
-            password:hashedPassword,
-        }).catch((err) => {
-            if (err){
-                console.log(err)
+        //Tutaj jest sprawdzańsko czy ktoś wpisuje już istniejący email albo username oba muszą być unique! bo będzie sięłatwiej logować
+        //Trzeba coś chyba tutaj zrobić bo jak wykryje błąd to strona nie przestaje się ładować i nie wiem co z tym zrobić
+        //Tutaj zapytanie o email
+        const check_email_result =  await User.findOne({
+            where: {
+                email: req.body.email,
             }
         });
+        //If email exists == back off
+        if(check_email_result != null){
+            console.log('email taken!');
+        }else{
+            //Czy jest name w bazie danych
+            const check_name_result =  await User.findOne({
+                where: {
+                    name: req.body.name,
+                }
+            });
+                //If name exists == back off
+            if( check_name_result != null){
+                console.log('username taken!');
+            }else{
+                //Jak nie ma takiego emaila ani username to dojdzie tutaj
+                //To tworzy rekord w tabeli 
+                User.create({
+                    name: req.body.name, 
+                    email: req.body.email, 
+                    password: hashedPassword,
+                }).catch((err) => {
+                    if (err){
+                        console.log(err)
+                    }
+                });
+                res.redirect('/login')
+            }
+        }
 
-        res.redirect('/login')
     } catch {
         res.redirect('/register')
     }

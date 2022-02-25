@@ -24,7 +24,7 @@ function initialize(passport, getUserByEmail, getUserById) {
             }
             console.log('mysql connected')
             */
-
+        //Tutaj tworzę model seqelize żeby widział co jest w bazie danych
         const User = sequelize.define("user", {
         id:{
             type: DataTypes.INTEGER(11),
@@ -46,8 +46,8 @@ function initialize(passport, getUserByEmail, getUserById) {
             timestamps: false,
             tableName: 'users',
         });
-        
-        result =  await User.findAll({
+        //tutaj jest SELECT ale w sequelize
+        const result =  await User.findAll({
             where: {
                 [Op.or]: [
                     {email: form_email},
@@ -56,20 +56,18 @@ function initialize(passport, getUserByEmail, getUserById) {
             }
         });
         
-        /*
-        console.log('REsult'+result);
-
+        //Dalej jest porównywanie hasła 
         if (result == null) {
             return done(null, false, { message: 'There is no user with that name or email' })
         }
-        */
+        
         try {
             //Tutaj musiałem zrobić krótką funkcję żeby móc użyćasync bo inaczej hasło nie miało czasu się hashować przed jego sprawdzeniem
             async function HashAndCheck(){
 
                 let hashedPassword = await bcrypt.hash(form_password, 10)
 
-                if ( bcrypt.compare(hashedPassword, User.password) ) {
+                if ( bcrypt.compare(hashedPassword, result[0].password) ) {
                     return done(null, form_email)
                 } else {
                 return done(null, false, { message: 'Password incorrect' })
@@ -82,7 +80,7 @@ function initialize(passport, getUserByEmail, getUserById) {
             return done(err)
         }
     }
-
+    //Temu się trzeba poważnie przypatrzeć bo ni mom pojęcia co tu się odpitala
     passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser))
     /*passport.serializeUser((user, done) => done(null, user.id))
     passport.deserializeUser((id, done) => {
