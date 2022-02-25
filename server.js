@@ -9,21 +9,27 @@ const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
-const mysql = require('mysql')
+//const mysql = require('mysql')
 
+//Sequelize first try
+const { Sequelize, DataTypes }  = require('sequelize');
+//Connectint Sequelize to database
+
+const sequelize = new Sequelize('bookweb', 'root', '', {
+    host: 'localhost',
+    dialect: 'mysql',
+});
+
+//This writes out if database connection is ok
+sequelize.authenticate()
+    .then(() => console.log('Database connected'))
+    .catch((err) => console.log(err))
 
 const initializePassport = require('./passport-config')
+const { DEC8_BIN } = require('mysql/lib/protocol/constants/charsets')
 initializePassport(
     passport
-    //To działa na podstawie tablicy z js(do zmiany)!!!
-    //email => users.find(user => user.email === email),
-    //id => users.find(user => user.id === id)
 )
-//!!!
-//To jest wstępna "baza danych", ale to tylko tablica z js
-//Przez to że to tylko tablica, to nie zapamiętuje rzeczy jeśli wyłączysz i włączysz srewer, dlatego potrzeba jest baza danych
-const users = []
-
 
 //To jest potrzebne, dlaczego? nie wiem
 app.set('view-engine', 'ejs')
@@ -63,14 +69,7 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     try {
         let hashedPassword = await bcrypt.hash(req.body.password, 10)
   
-        // To bierze rzeczy z form'a i wstawia je do tablicy (to nie może tak być musi być baza danych)!!!
-        //users.push({
-            //id: Date.now().toString(),
-            //name: req.body.name,
-            //email: req.body.email,
-            //password: hashedPassword
-        //})
-  
+        /*
         // połączenie z bazą danych
         let con = mysql.createConnection({
             host: 'localhost',
@@ -95,7 +94,43 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
   
         })
         });
-  
+        */
+         //Sequelize version:
+        //Tworzenie modelu bazy danych "bookweb.users"
+        
+        const User = sequelize.define("user", {
+        id:{
+            type: DataTypes.INTEGER(11),
+            primaryKey:true,
+            autoIncrement:true,
+            unique:true,
+        },
+        name:{
+            type: DataTypes.STRING(50),
+        },
+        email:{
+            type: DataTypes.STRING(50),
+            unique: true,
+        },
+        password:{
+            type: DataTypes.STRING(255),
+        }, 
+        }, {
+            timestamps: false,
+            tableName: 'users',
+        });
+        
+        //To tworzy rekord w tabeli 
+        User.create({
+            name: req.body.name, 
+            email:req.body.email, 
+            password:hashedPassword,
+        }).catch((err) => {
+            if (err){
+                console.log(err)
+            }
+        });
+
         res.redirect('/login')
     } catch {
         res.redirect('/register')
