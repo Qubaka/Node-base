@@ -7,7 +7,7 @@ const sequelize = new Sequelize('bookweb', 'root', '', {
     host: 'localhost',
     dialect: 'mysql',
 });
-function initialize(passport, getUserByEmail, getUserById) {
+function initialize(passport/* ,getUserByEmail, getUserById*/) {
     const authenticateUser = async (form_email, form_password, done) => {
         //Pważnie nie mam pojęcia do czego jest getUserByEmail i getUserById też
         /*
@@ -47,28 +47,25 @@ function initialize(passport, getUserByEmail, getUserById) {
             tableName: 'users',
         });
         //tutaj jest SELECT ale w sequelize
-        const result =  await User.findAll({
+        const user =  await User.findOne({
             where: {
-                [Op.or]: [
-                    {email: form_email},
-                    {name: form_email},
-                ]
+                email: form_email,
             }
         });
         
         //Dalej jest porównywanie hasła 
-        if (result == null) {
-            return done(null, false, { message: 'There is no user with that name or email' })
+        if (user == null) {
+            return done(null, false, { message: 'There is no user with that email' })
         }
         
         try {
             //Tutaj musiałem zrobić krótką funkcję żeby móc użyćasync bo inaczej hasło nie miało czasu się hashować przed jego sprawdzeniem
             async function HashAndCheck(){
 
-                let hashedPassword = await bcrypt.hash(form_password, 10)
-
-                if ( bcrypt.compare(hashedPassword, result[0].password) ) {
-                    return done(null, form_email)
+                
+                // Bcrypt jest jakiś zwalony bo zawsze zwraca prawdę nie ważne co
+                if ( bcrypt.compare(form_password, user.password) ) {
+                    return done(null, user)
                 } else {
                 return done(null, false, { message: 'Password incorrect' })
                 }
@@ -87,11 +84,11 @@ function initialize(passport, getUserByEmail, getUserById) {
         return done(null, getUserById(id))
     })*/
     passport.serializeUser(function(user, done) {
-        done(null, user);
-      });
+        return done(null, user);
+    });
       
-      passport.deserializeUser(function(user, done) {
-        done(null, user);
-      });
+    passport.deserializeUser(function(user, done) {
+        return done(null, user);
+  });
 }
 module.exports = initialize

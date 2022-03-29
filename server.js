@@ -48,7 +48,8 @@ app.use(methodOverride('_method'))
 
 // To przesyła stuff pomiędzy stronami, (nie wiem jak to dokońca działa) (app.get/app.post itd.)
 app.get('/', checkAuthenticated, (req, res) => {
-    res.render('index.ejs', { name: req.user.name })
+    
+    res.render('index.ejs', { user: req.user })
 })
   
 app.get('/login', checkNotAuthenticated, (req, res) => {
@@ -93,7 +94,7 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
             timestamps: false,
             tableName: 'users',
         });
-        //Tutaj jest sprawdzańsko czy ktoś wpisuje już istniejący email albo username oba muszą być unique! bo będzie sięłatwiej logować
+        //Tutaj jest sprawdzańsko czy ktoś wpisuje już istniejący email musi być unique! bo będzie się łatwiej logować
         //Trzeba coś chyba tutaj zrobić bo jak wykryje błąd to strona nie przestaje się ładować i nie wiem co z tym zrobić
         //Tutaj zapytanie o email
         const check_email_result =  await User.findOne({
@@ -103,31 +104,26 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
         });
         //If email exists == back off
         if(check_email_result != null){
+            // Window.alert z jakiegoś powodu sprawia że strona się nie zawiesza po wpisaniu istniejącego emaila
+            //Fajnie by jeszcze było jakby się pokazywał...
+            window.alert("sometext");
             console.log('email taken!');
+            //res.redirect('/register');
         }else{
-            //Czy jest name w bazie danych
-            const check_name_result =  await User.findOne({
-                where: {
-                    name: req.body.name,
+
+            //Jak nie ma takiego emaila ani username to dojdzie tutaj
+            //To tworzy rekord w tabeli 
+            User.create({
+                name: req.body.name, 
+                email: req.body.email, 
+                password: hashedPassword,
+            }).catch((err) => {
+                if (err){
+                    console.log(err)
                 }
             });
-                //If name exists == back off
-            if( check_name_result != null){
-                console.log('username taken!');
-            }else{
-                //Jak nie ma takiego emaila ani username to dojdzie tutaj
-                //To tworzy rekord w tabeli 
-                User.create({
-                    name: req.body.name, 
-                    email: req.body.email, 
-                    password: hashedPassword,
-                }).catch((err) => {
-                    if (err){
-                        console.log(err)
-                    }
-                });
-                res.redirect('/login')
-            }
+            res.redirect('/login')
+            
         }
 
     } catch {
