@@ -48,8 +48,44 @@ app.use(methodOverride('_method'))
 
 // To przesyła stuff pomiędzy stronami, (nie wiem jak to dokońca działa) (app.get/app.post itd.)
 app.get('/', checkAuthenticated, (req, res) => {
-    
     res.render('index.ejs', { user: req.user })
+})
+// To jest testowa strona do testowego testowania
+app.get('/books',  (req, res) => {
+    const Books = sequelize.define("book", {
+    id:{
+        type: DataTypes.INTEGER(11),
+        primaryKey:true,
+        autoIncrement:true,
+        unique:true,
+    },
+    title:{
+        type: DataTypes.STRING(250),
+    },
+    author:{
+        type: DataTypes.STRING(250),
+    },
+    publisher:{
+        type: DataTypes.STRING(250),
+    }, 
+    }, {
+        timestamps: false,
+        tableName: 'books',
+    });
+
+    async function Render_books(){
+
+        const All_books =  await Books.findAll({
+            raw: true
+        });
+        console.log(All_books[0])
+        return All_books;
+
+    }
+    let All_books = Render_books().then(() => res.render('books.ejs', { All_books: req.All_books}))
+    //console.log(All_books[0])
+    //res.render('books.ejs', { All_books: req.All_books})
+
 })
   
 app.get('/login', checkNotAuthenticated, (req, res) => {
